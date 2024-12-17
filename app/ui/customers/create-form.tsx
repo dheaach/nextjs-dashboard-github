@@ -10,11 +10,11 @@ import {
   EnvelopeIcon
 } from '@heroicons/react/24/outline';
 import { Button } from '@/app/ui/button';
-import { createCustomer, State } from '@/app/lib/actions';
+import { createCustomer, State2 } from '@/app/lib/actions';
 import { useActionState } from 'react';
 
 export default function Form({ customers }: { customers: CustomerField[] }) {
-  const initialState: State = { message: null, errors: {} };
+  const initialState: State2 = { message: null, errors: {} };
   const [state, formAction] = useActionState(createCustomer, initialState);
 
   return (

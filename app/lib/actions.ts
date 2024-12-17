@@ -20,17 +20,31 @@ const FormSchema = z.object({
   }),
   date: z.string(),
 });
- 
+
+const CustomerSchema = z.object({
+  id: z.string(),
+  name: z.string().min(1, 'Name is required'),
+  email: z.string().email('Please enter a valid email address')
+});
+
 const CreateInvoice = FormSchema.omit({ id: true, date: true });
 const UpdateInvoice = FormSchema.omit({ id: true, date: true });
-const CreateCustomer = FormSchema.omit({ id: true, date: true });
-const UpdateCustomer = FormSchema.omit({ id: true, date: true });
+const CreateCustomer = CustomerSchema.omit({ id: true});
+const UpdateCustomer = CustomerSchema.omit({ id: true});
 
 export type State = {
   errors?: {
     customerId?: string[];
     amount?: string[];
     status?: string[];
+  };
+  message?: string | null;
+};
+
+export type State2 = {
+  errors?: {
+    name?: string[];
+    email?: string[];
   };
   message?: string | null;
 };
@@ -152,12 +166,11 @@ export async function deleteCustomer(id: string) {
   }
 }
 
-export async function createCustomer(prevState: State, formData: FormData) {
+export async function createCustomer(prevState: State2, formData: FormData) {
   // Validate form using Zod
   const validatedFields = CreateCustomer.safeParse({
-    customerId: formData.get('customerId'),
-    amount: formData.get('amount'),
-    status: formData.get('status'),
+    name: formData.get('name'),
+    email: formData.get('email'),
   });
  
   // If form validation fails, return errors early. Otherwise, continue.
@@ -169,24 +182,22 @@ export async function createCustomer(prevState: State, formData: FormData) {
   }
  
   // Prepare data for insertion into the database
-  const { customerId, amount, status } = validatedFields.data;
-  const amountInCents = amount * 100;
-  const date = new Date().toISOString().split('T')[0];
+  const {name, email } = validatedFields.data;
  
   // Insert data into the database
   try {
     await sql`
-      INSERT INTO invoices (customer_id, amount, status, date)
-      VALUES (${customerId}, ${amountInCents}, ${status}, ${date})
+      INSERT INTO customers (name, email)
+      VALUES (${name}, ${email})
     `;
   } catch (error) {
     // If a database error occurs, return a more specific error.
     return {
-      message: 'Database Error: Failed to Create Invoice.',
+      message: 'Database Error: Failed to Create Customers.',
     };
   }
  
-  // Revalidate the cache for the invoices page and redirect the user.
-  revalidatePath('/dashboard/invoices');
-  redirect('/dashboard/invoices');
+  // Revalidate the cache for the customers page and redirect the user.
+  revalidatePath('/dashboard/customers');
+  redirect('/dashboard/customers');
 }

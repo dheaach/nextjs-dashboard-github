@@ -219,20 +219,22 @@ export async function fetchFilteredCustomers(
 
 export async function fetchCustomersPages(query: string) {
   try {
-    const count = await sql`SELECT COUNT(*)
-		FROM customers
-		LEFT JOIN invoices ON customers.id = invoices.customer_id
-		WHERE
-		  customers.name ILIKE ${`%${query}%`} OR
+    const count = await sql`
+      SELECT COUNT(*) AS total_count
+      FROM customers
+      LEFT JOIN invoices ON customers.id = invoices.customer_id
+      WHERE
+        customers.name ILIKE ${`%${query}%`} OR
         customers.email ILIKE ${`%${query}%`}
-		GROUP BY customers.id, customers.name, customers.email, customers.image_url
-		ORDER BY customers.name ASC
-	  `;
+    `;
 
-    const totalPages = Math.ceil(Number(count.rows[0].count) / ITEMS_PER_PAGE);
+    // Check if count.rows is empty
+    const totalCount = count.rows[0]?.total_count || 0; // Default to 0 if no results
+
+    const totalPages = Math.ceil(Number(totalCount) / ITEMS_PER_PAGE);
     return totalPages;
   } catch (error) {
     console.error('Database Error:', error);
-    throw new Error('Failed to fetch total number of invoices.');
+    throw new Error('Failed to fetch total number of customers.');
   }
 }
